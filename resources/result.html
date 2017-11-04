@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport"
+              content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <link rel="stylesheet"
+              href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+              integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+              crossorigin="anonymous">
+
+        <link rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/monokai-sublime.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+
+        <script src="https://code.highcharts.com/stock/highstock.js"></script>
+        <script src="https://code.highcharts.com/modules/annotations.js"></script>
+        <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+
+        <style>
+            #toggle {
+                position: absolute;
+                right: 0px;
+                top: 20px;
+                font-size: 14px;
+                color: #005aff;
+                cursor: pointer;
+            }
+
+            .bold {
+                font-weight: bold;
+            }
+
+            .red {
+                color: red;
+            }
+
+            .grey {
+                opacity: 0.7;
+            }
+
+            .infoTable td:nth-child(2n - 1) {
+                font-weight: bold;
+            }
+
+            header {
+                position: relative;
+            }
+
+            table {
+                width: 100%;
+            }
+
+            section {
+                margin-bottom: 20px;
+                margin-top: 40px;
+                min-width: 800px;
+            }
+
+            h3 {
+                font-size: 25px;
+                margin-bottom: 20px;
+                cursor: pointer;
+            }
+
+            body {
+                background-color: #FEFEFE;
+                width: 80%;
+                margin: 0px auto;
+                margin-top: 20px;
+                margin-bottom: 20px;
+            }
+
+            footer {
+                text-align: right;
+                font-size: 14px;
+                font-style: italic;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h2>Backtest result page</h2>
+            <a id="toggle">Hide/Show all</a>
+        </header>
+        <section>
+            <h3 data-toggle="collapse" data-target="#settings">Settings</h3>
+            <div id="settings" class="collapse show">
+                <table class="infoTable table table-striped">
+                    <tbody>
+                        <tr>
+                            <td>
+                                Strategy:
+                            </td>
+                            <td>
+                                <%- config.strategy %>
+                            </td>
+                            <td>
+                                Init. capital:
+                            </td>
+                            <td>
+                                <%- fc(config.capital) %>
+                            </td>
+                            <td>
+                                From:
+                            </td>
+                            <td>
+                                <%- config.from %>
+                            </td>
+                            <td>
+                                Untill:
+                            </td>
+                            <td>
+                                <%- config.to %>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Timeframe:
+                            </td>
+                            <td>
+                                <%- config.timeframe %>
+                            </td>
+                            <td>
+                                Tickers:
+                            </td>
+                            <td colspan="1">
+                                <%- config.tickers.join(',') %>
+                            </td>
+                            <td>
+                                Slippage:
+                            </td>
+                            <td>
+                                <%- JSON.stringify(config.slippage.bars || 0) %>
+                            </td>
+                            <td>
+                                Fees:
+                            </td>
+                            <td>
+                                <%- JSON.stringify(config.fees) %>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section>
+            <h3 data-toggle="collapse" data-target="#info">Result</h3>
+            <div id="info" class="collapse show">
+                <table class="infoTable table table-striped">
+                    <tbody>
+                        <tr>
+                            <td>
+                                Initial capital:
+                            </td>
+                            <td>
+                                <%- fc(capital.start) %>
+                            </td>
+                            <td>
+                                Ending capital:
+                            </td>
+                            <td>
+                                <%- fc(capital.end) %>
+                            </td>
+                            <td>
+                                Profit:
+                            </td>
+                            <td class="<%- capital.percent < 0 ? 'red' : '' %>">
+                                <%- fc(capital.profit) %>
+                            </td>
+                            <td>
+                                Profit %:
+                            </td>
+                            <td class="<%- capital.percent < 0 ? 'red' : '' %>">
+                                <%- fp(capital.percent * 100) %>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Total:</td>
+                            <td><%- info.total %></td>
+                            <td>Winning:</td>
+                            <td><%- info.winning %> | <%- fp(info.winningPercent * 100) %></td>
+                            <td>Losing:</td>
+                            <td><%- info.losing %> | <%- fp(info.losingPercent * 100) %></td>
+                            <td>Consecutive win/loss:</td>
+                            <td><%- info.winningConsecutive %> / <span class="red"><%- info.losingConsecutive %></span></td>
+                        </tr>
+                        <tr>
+                            <td>Avg trade:</td>
+                            <td class="<%- info.average < 0 ? 'red' : '' %>"><%- fc(info.average) %></td>
+                            <td>Avg profit:</td>
+                            <td><%- fc(info.averageProfit) %></td>
+                            <td>Avg loss:</td>
+                            <td class="red"><%- fc(info.averageLoss) %></td>
+                            <td>Max loss/profit:</td>
+                            <td><%- fc(info.maxLoss) %> / <%- fc(info.maxProfit) %></td>
+                        </tr>
+                        <tr>
+                            <td>Max DD:</td>
+                            <td><%- fp(info.drawdown * 100) %></td>
+                            <td>Max DD recovery #:</td>
+                            <td><%- info.drawdownRecovery %></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section>
+            <h3 data-toggle="collapse" data-target="#capital">Capital</h3>
+            <div id="capital" class="collapse show"></div>
+            <script>
+
+                $(document).ready(function() {
+                    var data = JSON.parse('<%- JSON.stringify(capital.growth.data) %>')
+                    Highcharts.chart('capital', {
+                        title: {
+                          text: 'Capital growth'
+                        },
+                      chart: {
+                        type: 'area',
+                        zoomType: 'x',
+                        panning: true,
+                        panKey: 'shift'
+                      },
+
+                      legend: {
+                        enabled: false
+                      },
+                        tooltip: {
+                            shared: true,
+                            xDateFormat: 'Date: %Y-%m-%d %H:%M',
+                            pointFormat: 'Equity: ${point.y}'
+                        },
+                        xAxis: {
+                          type: 'datetime',
+                          dateTimeLabelFormats: {
+                            month: '%e. %b %H:%M',
+                            year: '%b'
+                          },
+                          title: {
+                            text: 'Date'
+                          }
+                        },
+                        yAxis: {
+                          startOnTick: true,
+                          endOnTick: false,
+                          maxPadding: 0.35,
+                          min: parseInt("<%- capital.growth.min %>", 10),
+
+                          title: {
+                                text: 'Capital'
+                            },
+                            labels: {
+                                formatter: function () { return '$'+ this.value }
+                            }
+                        },
+                        plotOptions: {
+                            line: {
+                                dataLabels: {
+                                    enabled: true
+                                },
+                                enableMouseTracking: false
+                            }
+                        },
+
+                        series: [{
+                            data: data,
+                            lineColor: Highcharts.getOptions().colors[1],
+                            color: Highcharts.getOptions().colors[0],
+                            fillOpacity: 0.5,
+                            name: 'Elevation',
+                            marker: {
+                                enabled: false
+                            }
+                        }]
+                    });
+                })
+            </script>
+        </section>
+
+        <section>
+            <h3 data-toggle="collapse" data-target="#entries">Entries</h3>
+            <div id="entries" class="collapse show"></div>
+            <script>
+                $(document).ready(function() {
+                  var data = JSON.parse('<%- JSON.stringify(stockInfo.data) %>')
+                  var flags = JSON.parse('<%- JSON.stringify(stockInfo.flags) %>')
+
+                  console.log("FLAGS", flags)
+                  Highcharts.stockChart('entries', {
+                    rangeSelector: {
+                      selected: 1
+                    },
+                    chart: {
+                      panning: true,
+                      panKey: 'shift'
+                    },
+
+                    title: {
+                      text: '<%- stockInfo.ticker %> Stock Price'
+                    },
+
+                    series: [{
+                      name: '<%- stockInfo.ticker %>',
+                      id: 'data',
+                      data: data,
+                      turboThreshold: 0,
+                      tooltip: {
+                        valueDecimals: 2
+                      }
+                    }, {
+                      type: 'flags',
+                      data: flags,
+                      turboThreshold: 0,
+                      onSeries: 'data',
+                      shape: 'squarepin',
+                      width: 16
+                    }]
+                  });
+                })
+            </script>
+        </section>
+
+        <!--<section>-->
+            <!--<h3>Drawdown</h3>-->
+        <!--</section>-->
+
+        <section>
+            <h3 data-toggle="collapse" data-target="#growthTable">Months/Years</h3>
+            <div id="growthTable" class="collapse show">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <% growthTable.head.forEach(function(colName, colIndex) { %>
+                                <th><%- colName %></th>
+                            <% }) %>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% growthTable.rows.forEach(function(row, rowIndex){ %>
+                        <tr>
+                            <% row.forEach(function(colVal, colIndex){ %>
+                            <td class="<%- colIndex && colVal < 0 ? 'red' : '' %> <%- (!colIndex || colIndex + 1 === row.length) ? 'bold' : '' %> <%- (rowIndex + 1 === growthTable.rows.length) ? 'grey' : '' %>">
+                                <% if (!colIndex || (rowIndex == growthTable.rows.length - 1 && colIndex == row.length - 1)) { %>
+                                    <%- colVal %>
+                                <% } else {  %>
+                                    <%- fp(colVal) %>
+                                <% } %>
+                            </td>
+                            <% }) %>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section>
+            <h3 data-toggle="collapse" data-target="#orders">Orders</h3>
+            <div id="orders" class="collapse show">
+
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th class="small-hidden" width="30">#</th>
+                        <th>Pos</th>
+                        <th>Ticker</th>
+                        <th>Amnt (pieces)</th>
+                        <th>Open date</th>
+                        <th>O. Price</th>
+                        <th>Close date</th>
+                        <th>C. Price</th>
+                        <th>
+                            Profit/Loss
+                        </th>
+                        <th>
+                            Ending capital
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <% orders.forEach(function(order, index){ %>
+                        <tr ng-repeat="item in orders" class="ng-scope">
+                            <td><%- index+1 %></td>
+                            <td><%- (order.amount >= 0) ? "L" : "S" %></td>
+                            <td><%- order.ticker %></td>
+                            <td><%- Number(order.amount.toFixed(8)) %></td>
+                            <td><%- order.openDate %></td>
+                            <td><%- fc(order.openPrice) %> (<%- fc(order.openPriceTotal) %>)</td>
+                            <td><%- order.closeDate %></td>
+                            <td><%- fc(order.closePrice) %> (<%- fc(order.closePriceTotal) %>)</td>
+                            <td class="<%- order.profitTotal > 0 ? 'black' : 'red' %>">
+                                <%- fc(order.profitTotal) %> | <%- fp(order.profitPercent)
+                                %>
+                            </td>
+                            <td><%- fc(order.endCapital) %></td>
+                        </tr>
+                    <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+
+        <section>
+            <h3 data-toggle="collapse" data-target="#code">Code</h3>
+            <div id="code" class="collapse show">
+                <pre><code class="JavaScript"><%- code %></code></pre>
+            </div>
+            <script>hljs.initHighlightingOnLoad();</script>
+        </section>
+
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"
+                integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb"
+                crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"
+                integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn"
+                crossorigin="anonymous"></script>
+
+    <footer>
+        Created with love by <a target="_blank" href="http://www.janjuna.cz/">JJ</a>.
+    </footer>
+
+    <script>
+        $(document).ready(function () {
+          $('#toggle').on('click', function () {
+            if($('.collapse').hasClass('show'))
+                $('.collapse').collapse('hide');
+            else
+                $('.collapse').collapse('show');
+
+            return false;
+          });
+        })
+    </script>
+    </body>
+</html>

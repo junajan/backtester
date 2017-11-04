@@ -1,0 +1,8 @@
+tmp
+.idea
+*.log
+coverage
+node_modules
+
+results/*.html
+config/env.json
